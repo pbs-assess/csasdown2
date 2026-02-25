@@ -212,84 +212,67 @@ fix_table_cell_styles_xml <- function(xml_content) {
 
   # Step 1: Remove duplicate styles (function may be called multiple times)
   xml_content <- gsub(
-    '(<w:pPr>)(?:<w:pStyle w:val="(?:BodyText|Caption-Table)"/>)+',
-    '\\1',
+    '<w:pPr>(?:<w:pStyle w:val="(?:BodyText|Caption-Table)"/>)+',
+    '<w:pPr>',
     xml_content,
     perl = TRUE
   )
 
   # Step 2: Process each table individually to track row positions
-  # Split content by tables
+  # Use regmatches replacement to avoid repeatedly rescanning large strings.
   table_pattern <- '<w:tbl[^>]*>.*?</w:tbl>'
   tables <- gregexpr(table_pattern, xml_content, perl = TRUE)
 
-  if (tables[[1]][1] != -1) {
-    table_matches <- regmatches(xml_content, tables)[[1]]
-
-    # Process each table
-    for (i in seq_along(table_matches)) {
-      original_table <- table_matches[i]
-      modified_table <- original_table
-
-      # Find all rows in this table
-      row_pattern <- '<w:tr[^>]*>.*?</w:tr>'
-      rows <- gregexpr(row_pattern, modified_table, perl = TRUE)
-
-      if (rows[[1]][1] != -1) {
-        row_matches <- regmatches(modified_table, rows)[[1]]
-
-        # Process each row
-        for (row_idx in seq_along(row_matches)) {
-          original_row <- row_matches[row_idx]
-          modified_row <- original_row
-
-          # Determine style based on row position
-          is_header <- row_idx == 1
-          style_name <- if (is_header) "Caption-Table" else "BodyText"
-
-          # Inject style into table cell paragraphs that don't have a style
-          # Pattern: Find <w:pPr> immediately following </w:tcPr><w:p>
-          modified_row <- gsub(
-            '(</w:tcPr><w:p><w:pPr>)(?!<w:pStyle)',
-            paste0('\\1<w:pStyle w:val="', style_name, '"/>'),
-            modified_row,
-            perl = TRUE
-          )
-
-          # Remove font size from header row only (let Caption-Table style control it)
-          if (is_header) {
-            modified_row <- gsub('<w:sz w:val="20"/>', '', modified_row, fixed = TRUE)
-            modified_row <- gsub('<w:szCs w:val="20"/>', '', modified_row, fixed = TRUE)
-          }
-
-          # Remove Helvetica font specifications from all table cells
-          # Let the Word styles (Caption-Table or BodyText) control the font
-          modified_row <- gsub(
-            '<w:rFonts w:ascii="Helvetica" w:hAnsi="Helvetica" w:eastAsia="Helvetica" w:cs="Helvetica"/>',
-            '<w:rFonts/>',
-            modified_row,
-            fixed = TRUE
-          )
-
-          # Replace the row in the table
-          modified_table <- sub(
-            fixed = TRUE,
-            pattern = original_row,
-            replacement = modified_row,
-            x = modified_table
-          )
-        }
-      }
-
-      # Replace the table in the content
-      xml_content <- sub(
-        fixed = TRUE,
-        pattern = original_table,
-        replacement = modified_table,
-        x = xml_content
-      )
-    }
+  if (tables[[1]][1] == -1) {
+    return(xml_content)
   }
+
+  table_matches <- regmatches(xml_content, tables)[[1]]
+
+  for (table_idx in seq_along(table_matches)) {
+    modified_table <- table_matches[table_idx]
+
+    # Remove Helvetica font specifications from all table cells.
+    # Let the Word styles (Caption-Table or BodyText) control the font.
+    modified_table <- gsub(
+      '<w:rFonts w:ascii="Helvetica" w:hAnsi="Helvetica" w:eastAsia="Helvetica" w:cs="Helvetica"/>',
+      '<w:rFonts/>',
+      modified_table,
+      fixed = TRUE
+    )
+
+    row_pattern <- '<w:tr[^>]*>.*?</w:tr>'
+    rows <- gregexpr(row_pattern, modified_table, perl = TRUE)
+    if (rows[[1]][1] == -1) {
+      table_matches[table_idx] <- modified_table
+      next
+    }
+
+    row_matches <- regmatches(modified_table, rows)[[1]]
+
+    for (row_idx in seq_along(row_matches)) {
+      is_header <- row_idx == 1
+      style_name <- if (is_header) "Caption-Table" else "BodyText"
+
+      row_matches[row_idx] <- gsub(
+        '(</w:tcPr><w:p><w:pPr>)(?!<w:pStyle)',
+        paste0('</w:tcPr><w:p><w:pPr><w:pStyle w:val="', style_name, '"/>'),
+        row_matches[row_idx],
+        perl = TRUE
+      )
+
+      # Let Caption-Table style control header text size.
+      if (is_header) {
+        row_matches[row_idx] <- gsub('<w:sz w:val="20"/>', '', row_matches[row_idx], fixed = TRUE)
+        row_matches[row_idx] <- gsub('<w:szCs w:val="20"/>', '', row_matches[row_idx], fixed = TRUE)
+      }
+    }
+
+    regmatches(modified_table, rows) <- list(row_matches)
+    table_matches[table_idx] <- modified_table
+  }
+
+  regmatches(xml_content, tables) <- list(table_matches)
 
   xml_content
 }

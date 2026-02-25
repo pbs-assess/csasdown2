@@ -1,5 +1,12 @@
 # csasdown development version
 
+## csasdown 0.0.0.90016
+
+* Speed up `fix_table_cell_styles_xml()` on documents with many tables
+  by optimizing regular expression searches on table cell XML. #22
+
+## csasdown 0.0.0.90015
+
 * Enhance documentation.
 
 * Detect raw `<`/`>` in `.bib` `doi` fields before rendering and raise a clear
