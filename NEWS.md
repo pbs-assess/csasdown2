@@ -1,5 +1,7 @@
 # csasdown development version
 
+* Fix missing spacing between `Body Text` paragraphs in Tech Reports. #20
+
 * Fix rendering of FSARs (was missing a .docx file). #18
 
 * Allow numeric years etc. in YAML. #5
