@@ -27,7 +27,7 @@ get_skeleton_fields <- function(type) {
 
 #' Validate YAML fields for CSAS documents
 #'
-#' Dynamically parses skeleton.Rmd to determine required fields.
+#' Dynamically parses `skeleton.Rmd` to determine required fields.
 #'
 #' @param index_fn Path to the index R Markdown file. Default: "index.Rmd"
 #' @param type Document type ("resdoc", "fsar", "sr", "techreport").
@@ -46,27 +46,19 @@ get_skeleton_fields <- function(type) {
 #' variants, as they are used in citations and references regardless of the
 #' document language setting.
 #'
-#' Required fields vary by document type:
-#'
-#' - **resdoc**: Requires `author`, `year`, `output`, and both English and
-#'   French title, address, and region fields
-#' - **fsar**: Requires report metadata (title, year, number, etc.) and
-#'   context information
-#' - **sr**: Requires `year`, `email`, `output`, and both English and French
-#'   title and region fields (French SR not yet supported)
-#' - **techreport**: Requires `author`, `year`, `report_number`, `abstract`,
-#'   `output`, and both English and French metadata fields
-#'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Validate before rendering
-#' check_yaml("index.Rmd", type = "resdoc", verbose = TRUE)
-#'
-#' # Auto-detect document type
-#' check_yaml()
+#' wd <- getwd()
+#' example_path <- file.path(tempdir(), "csasdown-example")
+#' dir.create(example_path)
+#' setwd(example_path)
+#' csasdown::draft("resdoc")
+#' check_yaml("index.Rmd", verbose = TRUE)
+#' setwd(wd)
+#' unlink(example_path, recursive = TRUE, force = TRUE)
 #' }
 #'
-#' @keywords internal
 #' @export
 check_yaml <- function(index_fn = "index.Rmd", type = NULL, verbose = FALSE) {
   if (!file.exists(index_fn)) {
@@ -97,6 +89,171 @@ check_yaml <- function(index_fn = "index.Rmd", type = NULL, verbose = FALSE) {
   }
 
   invisible(TRUE)
+}
+
+check_bibliography_for_unescaped_doi_angles <- function(index_fn = "index.Rmd") {
+  if (!file.exists(index_fn)) {
+    cli::cli_abort("The file {.file {index_fn}} does not exist.")
+  }
+
+  yaml_data <- rmarkdown::yaml_front_matter(index_fn)
+  bibliography <- yaml_data$bibliography
+
+  if (is.null(bibliography)) {
+    return(invisible(TRUE))
+  }
+
+  bibliography_files <- as.character(unlist(bibliography, use.names = FALSE))
+  if (length(bibliography_files) == 0) {
+    return(invisible(TRUE))
+  }
+
+  index_dir <- normalizePath(dirname(index_fn), winslash = "/", mustWork = TRUE)
+  issues <- list()
+
+  for (bib_file in bibliography_files) {
+    bib_path <- resolve_bibliography_path(bib_file, index_dir)
+    if (!file.exists(bib_path)) {
+      next
+    }
+
+    bib_text <- paste(readLines(bib_path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+    file_issues <- find_doi_angle_bracket_issues(bib_text, bib_path)
+    if (length(file_issues) > 0) {
+      issues <- c(issues, file_issues)
+    }
+  }
+
+  if (length(issues) > 0) {
+    locations <- vapply(
+      issues,
+      function(issue) paste0(issue$file, ":", issue$line, " (`", issue$value, "`)"),
+      character(1)
+    )
+    cli::cli_abort(c(
+      "Found unescaped angle brackets in DOI field(s) in bibliography file(s).",
+      "x" = "Raw `<` or `>` in `.bib` DOI values can break Word rendering.",
+      "i" = "Replace `<` and `>` with `&lt;` and `&gt;` in DOI fields.",
+      "i" = "This often appears later as: `Unescaped '<' not allowed in attributes values`.",
+      "i" = paste0("Problem locations:\n- ", paste(locations, collapse = "\n- "))
+    ))
+  }
+
+  invisible(TRUE)
+}
+
+resolve_bibliography_path <- function(path, base_dir) {
+  expanded <- path.expand(path)
+  if (grepl("^(/|[A-Za-z]:[/\\\\]|\\\\\\\\)", expanded)) {
+    return(normalizePath(expanded, winslash = "/", mustWork = FALSE))
+  }
+
+  normalizePath(file.path(base_dir, path), winslash = "/", mustWork = FALSE)
+}
+
+find_doi_angle_bracket_issues <- function(text, bib_path) {
+  matches <- gregexpr("(?i)\\bdoi\\s*=\\s*([{\"])", text, perl = TRUE)[[1]]
+  if (matches[1] == -1) {
+    return(list())
+  }
+
+  capture_starts <- attr(matches, "capture.start")[, 1]
+  capture_lengths <- attr(matches, "capture.length")[, 1]
+
+  issues <- list()
+
+  for (i in seq_along(matches)) {
+    if (capture_starts[i] < 0 || capture_lengths[i] < 1) {
+      next
+    }
+
+    delimiter <- substr(text, capture_starts[i], capture_starts[i] + capture_lengths[i] - 1)
+    value_start <- capture_starts[i] + capture_lengths[i]
+    bounds <- get_doi_value_bounds(text, delimiter, value_start)
+    if (is.null(bounds)) {
+      next
+    }
+
+    value <- substr(text, bounds$start, bounds$end)
+    bad_positions <- gregexpr("[<>]", value, perl = TRUE)[[1]]
+    if (bad_positions[1] == -1) {
+      next
+    }
+
+    first_bad_abs_pos <- bounds$start + bad_positions[1] - 1
+    preview <- trimws(gsub("\\s+", " ", value))
+    if (nchar(preview) > 80) {
+      preview <- paste0(substr(preview, 1, 77), "...")
+    }
+
+    issues[[length(issues) + 1]] <- list(
+      file = bib_path,
+      line = get_line_number(text, first_bad_abs_pos),
+      value = preview
+    )
+  }
+
+  issues
+}
+
+get_doi_value_bounds <- function(text, delimiter, value_start) {
+  text_len <- nchar(text)
+  if (value_start > text_len) {
+    return(NULL)
+  }
+
+  if (delimiter == "{") {
+    depth <- 1L
+    pos <- value_start
+
+    while (pos <= text_len && depth > 0L) {
+      ch <- substr(text, pos, pos)
+      if (ch == "{") {
+        depth <- depth + 1L
+      } else if (ch == "}") {
+        depth <- depth - 1L
+      }
+      pos <- pos + 1L
+    }
+
+    if (depth != 0L) {
+      return(NULL)
+    }
+
+    return(list(start = value_start, end = pos - 2L))
+  }
+
+  pos <- value_start
+  previous <- ""
+
+  while (pos <= text_len) {
+    ch <- substr(text, pos, pos)
+    if (ch == "\"" && previous != "\\") {
+      break
+    }
+    previous <- ch
+    pos <- pos + 1L
+  }
+
+  if (pos > text_len) {
+    return(NULL)
+  }
+
+  list(start = value_start, end = pos - 1L)
+}
+
+get_line_number <- function(text, position) {
+  if (position <= 1L) {
+    return(1L)
+  }
+
+  prefix <- substr(text, 1, position - 1L)
+  newlines <- gregexpr("\n", prefix, fixed = TRUE)[[1]]
+  if (newlines[1] == -1) {
+    return(1L)
+  }
+
+  length(newlines) + 1L
 }
 
 get_language_setting <- function(yaml_data, type) {

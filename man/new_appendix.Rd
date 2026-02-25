@@ -15,7 +15,7 @@ configures figure and table numbering for that appendix. This is the primary
 function users should call at the start of each appendix.
 }
 \examples{
-\dontrun{
+\donttest{
 # At the start of your first appendix
 new_appendix()  # Sets to "A"
 

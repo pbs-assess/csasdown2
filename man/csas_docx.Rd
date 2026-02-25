@@ -6,7 +6,7 @@
 \alias{resdoc_docx}
 \alias{sr_docx}
 \alias{techreport_docx}
-\title{Create .docx CSAS-formatted documents}
+\title{Create \code{.docx} CSAS-formatted documents}
 \usage{
 fsar_docx(...)
 
@@ -24,6 +24,16 @@ A \code{.docx} file
 }
 \description{
 This is a function called within the YAML of the
-\code{index.Rmd} file to specify the creation of a .docx version of a
+\code{index.Rmd} file to specify the creation of a \code{.docx} version of a
 CSAS report.
+}
+\examples{
+# These functions would normally only be specified within the YAML section of
+# index.Rmd
+
+x <- resdoc_docx()
+names(x)
+}
+\seealso{
+\code{\link[=render]{render()}}, \code{\link[=draft]{draft()}}
 }

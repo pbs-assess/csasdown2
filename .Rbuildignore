@@ -7,3 +7,5 @@
 ^scratch/
 ^data-raw/
 ^README-FR\.md$
+^inst/Makefile$
+^inst/paper\.pdf$

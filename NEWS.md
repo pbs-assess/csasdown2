@@ -1,5 +1,10 @@
 # csasdown development version
 
+* Enhance documentation.
+
+* Detect raw `<`/`>` in `.bib` `doi` fields before rendering and raise a clear
+  error pointing to file/line and the `&lt;`/`&gt;` fix. #19
+
 * Display positive affirmations on successful rendering. :)
 
 * Use `csl/csas-french.csl` automatically when `french: true` is set in docx

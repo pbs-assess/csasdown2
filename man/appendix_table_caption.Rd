@@ -21,15 +21,14 @@ This is useful when using \code{flextable::set_caption()} to ensure consistent
 formatting with automatic numbering.
 }
 \examples{
-\dontrun{
-# Using new_appendix() first
+library(flextable)
 new_appendix()
-flextable(df) \%>\%
+df <- data.frame(a = 1:3)
+flextable(df) |>
   set_caption(appendix_table_caption("Summary statistics"))
 
 # Or with set_appendix()
 set_appendix("A")
-flextable(df) \%>\%
+flextable(df) |>
   set_caption(appendix_table_caption("Model parameters"))
-}
 }

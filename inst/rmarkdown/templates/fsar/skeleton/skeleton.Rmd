@@ -31,7 +31,7 @@ inuktitut_citation: "Inuktitut citation here"
 output:
   csasdown::fsar_docx:
     french: false
-knit: (function(input, ...) {csasdown::render_fsar()})
+knit: (function(input, ...) {csasdown::render()})
 bibliography: bib/refs.bib
 title: ""
 ---

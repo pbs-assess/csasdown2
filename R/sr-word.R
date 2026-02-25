@@ -1,7 +1,7 @@
-#' Create .docx CSAS-formatted documents
+#' Create `.docx` CSAS-formatted documents
 #'
 #' @description This is a function called within the YAML of the
-#' `index.Rmd` file to specify the creation of a .docx version of a
+#' `index.Rmd` file to specify the creation of a `.docx` version of a
 #' CSAS report.
 #'
 #' @param ... Other arguments to [officedown::rdocx_document()]
@@ -10,6 +10,13 @@
 #' @importFrom officer headers_replace_text_at_bkm body_replace_text_at_bkm
 #'   footers_replace_text_at_bkm docx_set_settings body_add_docx
 #' @return A `.docx` file
+#' @seealso [render()], [draft()]
+#' @examples
+#' # These functions would normally only be specified within the YAML section of
+#' # index.Rmd
+#'
+#' x <- resdoc_docx()
+#' names(x)
 
 sr_docx <- function(...) {
   .csasdown_docx_base(

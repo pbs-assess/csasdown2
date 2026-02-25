@@ -20,7 +20,7 @@ as it auto-increments. Use this function when you need to explicitly set
 a specific appendix letter.
 }
 \examples{
-\dontrun{
+\donttest{
 # Explicitly set to Appendix A
 set_appendix("A")
 

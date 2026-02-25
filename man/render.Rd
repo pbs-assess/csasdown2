@@ -2,7 +2,7 @@
 % Please edit documentation in R/render.R
 \name{render}
 \alias{render}
-\title{Render a CSAS document}
+\title{Render a CSAS report}
 \usage{
 render(config_file = "_bookdown.yml", verbose = FALSE, ...)
 }
@@ -13,6 +13,39 @@ render(config_file = "_bookdown.yml", verbose = FALSE, ...)
 
 \item{...}{Arguments to pass to \code{\link[bookdown:render_book]{bookdown::render_book()}}.}
 }
+\value{
+A rendered \code{.docx} report.
+}
 \description{
-Automatically detects document type from YAML and renders appropriately.
+This is the main rendering function for reports.
+}
+\details{
+\code{render()} automatically detects
+document type from the YAML in \code{index.Rmd} and renders appropriately.
+
+\code{render()} can be called from the command line as \code{csasdown::render()} or via
+clicking the RStudio Knit button assuming the following YAML argument is set
+in \code{index.Rmd}:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{knit: (function(input, ...) \{csasdown::render()\})
+}\if{html}{\out{</div>}}
+}
+\examples{
+# create a temporary example folder:
+wd <- getwd()
+example_path <- file.path(tempdir(), "csasdown-example")
+dir.create(example_path)
+setwd(example_path)
+
+# create a draft template:
+csasdown::draft("resdoc")
+
+# render:
+csasdown::render()
+
+# return to original working directory after running example:
+setwd(wd)
+
+# clean up:
+unlink(example_path, recursive = TRUE, force = TRUE)
 }

@@ -25,17 +25,35 @@ Current directory by default}
 
 \item{...}{Other arguments to pass to \code{\link[rmarkdown:draft]{rmarkdown::draft()}}.}
 }
+\value{
+A new project folder with template files for creating a csasdown
+report.
+}
 \description{
-Create a draft of an R Markdown CSAS document
+Create a draft of an R Markdown CSAS document.
 }
 \details{
 This is a light wrapper around \code{\link[rmarkdown:draft]{rmarkdown::draft()}}. Consult that
 function for further details.
 }
 \examples{
-\dontrun{
+\donttest{
+# create a temporary example folder:
+wd <- getwd()
+example_path <- file.path(tempdir(), "csasdown-example")
+dir.create(example_path)
+setwd(example_path)
+
+# create a draft template:
 csasdown::draft("resdoc")
-csasdown::draft("fsar")
-csasdown::draft("techreport")
+
+# return to original working directory after running example:
+setwd(wd)
+
+# clean up:
+unlink(example_path, recursive = TRUE, force = TRUE)
 }
+}
+\seealso{
+\code{\link[=render]{render()}}
 }

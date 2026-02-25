@@ -14,7 +14,7 @@ Returns the current appendix letter. Useful for including in appendix headings
 to ensure the heading matches the automatic numbering.
 }
 \examples{
-\dontrun{
+\donttest{
 new_appendix()
 current_appendix()  # Returns "A"
 

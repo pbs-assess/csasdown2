@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # At the start of your first appendix
 #' new_appendix()  # Sets to "A"
 #'
@@ -46,7 +46,7 @@ new_appendix <- function() {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' new_appendix()
 #' current_appendix()  # Returns "A"
 #'
@@ -71,7 +71,7 @@ current_appendix <- function() {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Explicitly set to Appendix A
 #' set_appendix("A")
 #'
@@ -175,17 +175,18 @@ appendix_tab_opts <- function(appendix_letter = NULL) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Using new_appendix() first
+# Using new_appendix() first
+#' library(flextable)
 #' new_appendix()
-#' flextable(df) %>%
+#' df <- data.frame(a = 1:3)
+#' flextable(df) |>
 #'   set_caption(appendix_table_caption("Summary statistics"))
 #'
 #' # Or with set_appendix()
 #' set_appendix("A")
-#' flextable(df) %>%
+#' flextable(df) |>
 #'   set_caption(appendix_table_caption("Model parameters"))
-#' }
+
 appendix_table_caption <- function(caption, appendix_letter = NULL) {
   if (is.null(appendix_letter)) {
     appendix_letter <- getOption("csasdown_current_appendix")

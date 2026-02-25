@@ -1,6 +1,6 @@
-#' Render a CSAS document
+#' Render a CSAS report
 #'
-#' Automatically detects document type from YAML and renders appropriately.
+#' This is the main rendering function for reports.
 #'
 #' @param config_file YAML configuration file.
 #' @param verbose Verbose?
@@ -8,7 +8,39 @@
 #'
 #' @importFrom cli cli_alert_success cli_inform cli_abort
 #'
+#' @details
+#' `render()` automatically detects
+#' document type from the YAML in `index.Rmd` and renders appropriately.
+#'
+#' `render()` can be called from the command line as `csasdown::render()` or via
+#' clicking the RStudio Knit button assuming the following YAML argument is set
+#' in `index.Rmd`:
+#'
+#' ```
+#' knit: (function(input, ...) {csasdown::render()})
+#' ```
+#'
 #' @export
+#' @returns A rendered `.docx` report.
+#' @examples
+#' # create a temporary example folder:
+#' wd <- getwd()
+#' example_path <- file.path(tempdir(), "csasdown-example")
+#' dir.create(example_path)
+#' setwd(example_path)
+#'
+#' # create a draft template:
+#' csasdown::draft("resdoc")
+#'
+#' # render:
+#' csasdown::render()
+#'
+#' # return to original working directory after running example:
+#' setwd(wd)
+#'
+#' # clean up:
+#' unlink(example_path, recursive = TRUE, force = TRUE)
+
 render <- function(
     config_file = "_bookdown.yml",
     verbose = FALSE,
@@ -19,9 +51,10 @@ render <- function(
 
   check_yaml(index_fn = "index.Rmd", type = type, verbose = verbose)
   cli_alert_success("YAML validation passed")
+  check_bibliography_for_unescaped_doi_angles("index.Rmd")
 
   if (type == "fsar") {
-    return(render_sar(config_file = config_file, ...))
+    return(render_sar(config_file = config_file, validate_bibliography = FALSE, ...))
   }
 
   output_options <- list(pandoc_args = c("--metadata=title:", "--metadata=abstract:"))
@@ -67,7 +100,7 @@ positive_affirmation <- function(success = TRUE) {
   success_msgs <- c(
     "Beautifully done \u2014 you make this look easy \u2728",
     "Excellent work \u2014 the report rendered perfectly \U0001F44F",
-    "You\u2019re on a roll \u2014 flawless output \U0001F4D8",
+    "You're on a roll \u2014 flawless output \U0001F4D8",
     "Nicely handled \u2014 everything compiled smoothly \U0001F44D",
     "You've got the magic touch \u2014 great render \U0001FA84",
     "Calm, competent, and fully rendered \U0001F60C",
@@ -95,10 +128,15 @@ positive_affirmation <- function(success = TRUE) {
     "Rendering stopped short of the finish line."
   )
 
+  pick_message <- function(messages) {
+    idx <- as.integer(((unclass(Sys.time()) * 1e6) + Sys.getpid()) %% length(messages)) + 1L
+    messages[[idx]]
+  }
+
   if (isTRUE(success)) {
-    sample(success_msgs, 1L)
+    pick_message(success_msgs)
   } else {
-    sample(failure_msgs, 1L)
+    pick_message(failure_msgs)
   }
 }
 #' Render a SAR/FSAR
@@ -108,11 +146,14 @@ positive_affirmation <- function(success = TRUE) {
 #'
 #' @keywords internal
 #' @noRd
-render_sar <- function(config_file = "_bookdown.yml", ...) {
+render_sar <- function(config_file = "_bookdown.yml", validate_bibliography = TRUE, ...) {
   cat("\n")
 
   check_yaml(index_fn = "index.Rmd", type = "fsar", verbose = TRUE)
   cli_alert_success("YAML validation passed")
+  if (validate_bibliography) {
+    check_bibliography_for_unescaped_doi_angles("index.Rmd")
+  }
 
   # Find out what language is set to and set the option 'french' here
   # so that it works on the first compilation in a workspace

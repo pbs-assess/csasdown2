@@ -19,7 +19,7 @@ Invisibly returns TRUE if validation passes, aborts with
 informative error message if validation fails.
 }
 \description{
-Dynamically parses skeleton.Rmd to determine required fields.
+Dynamically parses \code{skeleton.Rmd} to determine required fields.
 }
 \details{
 Required fields are dynamically determined by parsing the skeleton.Rmd
@@ -29,27 +29,18 @@ single source of truth for required YAML fields.
 All fields in the skeleton are required, including both English and French
 variants, as they are used in citations and references regardless of the
 document language setting.
-
-Required fields vary by document type:
-\itemize{
-\item \strong{resdoc}: Requires \code{author}, \code{year}, \code{output}, and both English and
-French title, address, and region fields
-\item \strong{fsar}: Requires report metadata (title, year, number, etc.) and
-context information
-\item \strong{sr}: Requires \code{year}, \code{email}, \code{output}, and both English and French
-title and region fields (French SR not yet supported)
-\item \strong{techreport}: Requires \code{author}, \code{year}, \code{report_number}, \code{abstract},
-\code{output}, and both English and French metadata fields
-}
 }
 \examples{
-\dontrun{
+\donttest{
 # Validate before rendering
-check_yaml("index.Rmd", type = "resdoc", verbose = TRUE)
-
-# Auto-detect document type
-check_yaml()
+wd <- getwd()
+example_path <- file.path(tempdir(), "csasdown-example")
+dir.create(example_path)
+setwd(example_path)
+csasdown::draft("resdoc")
+check_yaml("index.Rmd", verbose = TRUE)
+setwd(wd)
+unlink(example_path, recursive = TRUE, force = TRUE)
 }
 
 }
-\keyword{internal}
