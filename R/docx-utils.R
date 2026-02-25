@@ -1184,6 +1184,9 @@ insert_section_break_after_abstract <- function(docx_path, french = FALSE) {
   ...
 ) {
   dots <- list(...)
+  french <- isTRUE(dots$french)
+  dots$french <- NULL
+  csl_path <- if (french) "csl/csas-french.csl" else "csl/csas.csl"
 
   default_pandoc_args <- c()
   if (use_pandoc_highlight) {
@@ -1193,7 +1196,7 @@ insert_section_break_after_abstract <- function(docx_path, french = FALSE) {
   default_pandoc_args <- c(
     default_pandoc_args,
     "--metadata", paste0("link-citations=", link_citations_value),
-    "--csl", "csl/csas.csl"
+    "--csl", csl_path
   )
 
   user_pandoc_args <- dots$pandoc_args

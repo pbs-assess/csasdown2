@@ -1,5 +1,8 @@
 # csasdown development version
 
+* Use `csl/csas-french.csl` automatically when `french: true` is set in docx
+  output options. #21
+
 * Fix missing spacing between `Body Text` paragraphs in Tech Reports. #20
 
 * Fix rendering of FSARs (was missing a .docx file). #18
