@@ -1,5 +1,7 @@
 # csasdown development version
 
+* Display positive affirmations on successful rendering. :)
+
 * Use `csl/csas-french.csl` automatically when `french: true` is set in docx
   output options. #21
 

@@ -57,9 +57,50 @@ render <- function(
   unlink(file.path("_book", "reference-keys.txt"))
 
   cli_alert_success("Render complete!")
+
+  cli_alert_success(positive_affirmation())
   invisible()
 }
 
+positive_affirmation <- function(success = TRUE) {
+
+  success_msgs <- c(
+    "Beautifully done \u2014 you make this look easy \u2728",
+    "Excellent work \u2014 the report rendered perfectly \U0001F44F",
+    "You\u2019re on a roll \u2014 flawless output \U0001F4D8",
+    "Nicely handled \u2014 everything compiled smoothly \U0001F44D",
+    "You've got the magic touch \u2014 great render \U0001FA84",
+    "Calm, competent, and fully rendered \U0001F60C",
+    "Another polished document thanks to you \U0001F31F",
+    "Steady hands, sharp mind \u2014 perfect output \U0001F4C4",
+    "You're making reproducible science look stylish \U0001F4CA",
+    "Look at you go \u2014 beautifully knitted \U0001F9F6",
+    "Reliable as ever \u2014 fantastic work \U0001F64C",
+    "You've done it again \u2014 smooth rendering all the way \U0001F30A",
+    "Top-tier work \u2014 the document came together beautifully \U0001F4C4",
+    "You make complex things look effortless \u2728",
+    "Another clean render under your belt \U0001F44F",
+    "Steady, skilled, and successfully compiled \U0001F44D",
+    "You've got this down to a science \U0001F52C",
+    "Precision work \u2014 it rendered perfectly \U0001F4CA",
+    "Dependable as ever \u2014 fantastic output \U0001F31F",
+    "You really stitched that together beautifully \U0001F9F6",
+    "Threaded the needle and nailed the render \U0001F3AF"
+  )
+
+  failure_msgs <- c(
+    "Rendering paused its journey \u2014 worth another try.",
+    "The document build took an unscheduled break.",
+    "Not quite this time \u2014 a rerun may do the trick.",
+    "Rendering stopped short of the finish line."
+  )
+
+  if (isTRUE(success)) {
+    sample(success_msgs, 1L)
+  } else {
+    sample(failure_msgs, 1L)
+  }
+}
 #' Render a SAR/FSAR
 #'
 #' @param config_file YAML configuration file.
