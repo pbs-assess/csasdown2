@@ -77,6 +77,26 @@ df2 <- data.frame(x = rnorm(10), y = rnorm(10))
 ggplot(df2, aes(x, y)) + geom_point() + theme_light()
 ```
 
+If you have an externally generated figure that you want to include, you can do it like the following. Note that with officedown, *we need to first figure out the aspect ratio of our figure and supply it to `fig.asp`*. We can then control the figure size via either `out.width` or `fig.width`.
+
+```{r}
+# pretend we generated this .png from some external R script:
+g <- ggplot(df2, aes(x, y)) + geom_point() + theme_light()
+ggsave("figs/example-figure.png", width = 4, height = 4)
+```
+
+```{r}
+# a little function to grab the aspect ratio of our .png file:
+get_asp <- function(x) {
+  info <- magick::image_info(magick::image_read(x))
+  info$height / info$width
+}
+```
+
+```{r example-fig3, fig.cap="Example figure read from an external .png file.", fig.asp=get_asp("figs/example-figure.png"), out.width="80%"}
+knitr::include_graphics("figs/example-figure.png")
+```
+
 ## MATH {#sec:math}
 
 You can include most valid LaTeX math:

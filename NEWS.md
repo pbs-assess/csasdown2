@@ -1,5 +1,11 @@
 # csasdown development version
 
+## csasdown 0.0.0.90017
+
+* Add example of how to include an externally created .png figure with the 
+  correct aspect ratio. See the Res Doc draft example template.
+  <https://github.com/pbs-assess/csasdown/blob/main/inst/rmarkdown/templates/resdoc/skeleton/01-introduction.Rmd>
+
 ## csasdown 0.0.0.90016
 
 * Speed up `fix_table_cell_styles_xml()` on documents with many tables
