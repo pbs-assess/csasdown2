@@ -28,7 +28,6 @@ Suggests:
     dplyr,
     flextable,
     ggplot2,
-    here,
     magick,
     knitr,
     testthat,

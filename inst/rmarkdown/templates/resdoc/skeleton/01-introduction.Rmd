@@ -82,7 +82,8 @@ If you have an externally generated figure that you want to include, you can do 
 ```{r}
 # pretend we generated this .png from some external R script:
 g <- ggplot(df2, aes(x, y)) + geom_point() + theme_light()
-ggsave(here::here("figs/example-figure.png"), width = 4, height = 4)
+dir.create("figs", showWarnings = FALSE)
+ggsave("figs/example-figure.png", width = 4, height = 4)
 ```
 
 ```{r}
@@ -93,8 +94,8 @@ get_asp <- function(x) {
 }
 ```
 
-```{r example-fig3, fig.cap="Example figure read from an external .png file.", fig.asp=get_asp(here::here("figs/example-figure.png")), out.width="80%"}
-knitr::include_graphics(here::here("figs/example-figure.png"))
+```{r example-fig3, fig.cap="Example figure read from an external .png file.", fig.asp=get_asp("figs/example-figure.png"), out.width="80%"}
+knitr::include_graphics("figs/example-figure.png")
 ```
 
 ## MATH {#sec:math}
